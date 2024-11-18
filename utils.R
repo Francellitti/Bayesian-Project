@@ -1,64 +1,136 @@
-##### FUNZIONE FILTRAGGIO GOAL PER SQUADRA #####
-squadra = function(nome){
-  goals=numeric(38)
-  conceded=numeric(38)
-  countg=0
-  countc=0
-  for (i in 1:380) {
-    if(season_1819_csv$AwayTeam[i] == nome){
-      countg=countg+1
-      countc=countc+1
-      goals[countg]=season_1819_csv$FTAG[i]
-      conceded[countc]=season_1819_csv$FTHG[i]
-      
-    }
-    if(season_1819_csv$HomeTeam[i] == nome){
-      countg=countg+1
-      countc=countc+1
-      goals[countg]=season_1819_csv$FTHG[i]
-      conceded[countc]=season_1819_csv$FTAG[i]
-    }
-  }
-  return(list(Fatti=goals,Concessi=conceded))
+# FUNCTIONS USED
+
+# Function to plot the total goals distribution
+plot_total_goals_distribution <- function(data) {
+  barplot(
+    rbind(dpois(0:6, 1.340834), c(prop.table(table(c(data$FTHG, data$FTAG))))),
+    col = c('turquoise4', 'gold'),
+    ylim = c(0, 0.4),
+    xlab = "Goals",
+    main = "Total goals distribution",
+    beside = TRUE,
+    border = FALSE,
+    ylab = "Frequencies"
+  )
+  legend("topright", fill = c('turquoise4', 'gold'), box.col = "white",
+         legend = expression("Theoretical distribution from a Poisson with " ~ theta == 1.34, "Real data"))
 }
 
-##### BIVARIATE POISSON DENSITY FUNCTION #####
-
-bivpois=function(lambda1, lambda2, lambda3, x, y){
-  valore=0
-  for (k in 1:min(x,y)) {
-    valore=valore + (choose(x,k)*choose(y,k)*factorial(k)*(lambda3/(lambda1*lambda2))^k)
+# Function to plot Poisson distributions
+plot_poisson_distribution <- function(lambdas) {
+  par(mfrow = c(2, 2))
+  set.seed(123)
+  for (lambda in lambdas) {
+    barplot(
+      prop.table(table(rpois(380, lambda))),
+      main = paste0("Poisson distribution for ", expression(theta), "=", lambda),
+      col = 'orange',
+      border = FALSE
+    )
   }
-  density1=exp(-(lambda1+lambda2+lambda3))*(lambda1^x/factorial(x))*(lambda2^y/factorial(y))*valore
+  par(mfrow = c(1, 1))
+}
+
+# Function to plot home and away goals
+plot_home_away_goals <- function(data) {
+  par(mfrow = c(1, 2))
+  set.seed(1234)
+  
+  # Home goals scored
+  barplot(
+    rbind(prop.table(table(data$FTHG)), dpois(0:6, 1.484)),
+    col = c('#f79256', 'lightblue'),
+    ylim = c(0, 0.4),
+    main = 'Home goals scored',
+    ylab = "Frequencies",
+    xlab = expression(x[i]),
+    beside = TRUE,
+    border = FALSE
+  )
+  legend("topright", fill = c('#f79256', 'lightblue'), box.col = "white",
+         legend = expression("Real data", "Poisson with " ~ theta == 1.484))
+  
+  # Away goals scored
+  barplot(
+    rbind(prop.table(table(data$FTAG)), dpois(0:6, 1.197)),
+    col = c('#f79256', 'lightblue'),
+    ylim = c(0, 0.4),
+    main = 'Away goals scored',
+    ylab = "Frequencies",
+    xlab = expression(y[i]),
+    beside = TRUE,
+    border = FALSE
+  )
+  legend("topright", fill = c('#f79256', 'lightblue'), box.col = "white",
+         legend = expression("Real data", "Poisson with " ~ theta == 1.197))
+  
+  par(mfrow = c(1, 1))
+}
+
+# Function to filter goals by team
+squadra <- function(nome) {
+  goals <- numeric(38)
+  conceded <- numeric(38)
+  countg <- 0
+  countc <- 0
+  for (i in 1:380) {
+    if (season_1819_csv$AwayTeam[i] == nome) {
+      countg <- countg + 1
+      countc <- countc + 1
+      goals[countg] <- season_1819_csv$FTAG[i]
+      conceded[countc] <- season_1819_csv$FTHG[i]
+    }
+    if (season_1819_csv$HomeTeam[i] == nome) {
+      countg <- countg + 1
+      countc <- countc + 1
+      goals[countg] <- season_1819_csv$FTHG[i]
+      conceded[countc] <- season_1819_csv$FTAG[i]
+    }
+  }
+  return(list(Goals = goals, Conceded = conceded))
+}
+
+# Bivariate Poisson density function
+bivpois <- function(lambda1, lambda2, lambda3, x, y) {
+  value <- 0
+  for (k in 1:min(x, y)) {
+    value <- value + (choose(x, k) * choose(y, k) * factorial(k) * (lambda3 / (lambda1 * lambda2))^k)
+  }
+  density1 <- exp(-(lambda1 + lambda2 + lambda3)) * (lambda1^x / factorial(x)) * (lambda2^y / factorial(y)) * value
   return(density1)
 }
 
-##### GENERATE RANDOM VALUES FROM BIVARIATE POISSON #####
-
-generate=function(n, lambda1, lambda2, lambda3){
-  match_result=numeric(n)
-  frama= sample_n(tbl = risultati_frame, weight = bivpois(lambda1,lambda2,lambda3, x=risultati_frame[,1], y =risultati_frame[,2]), size = 500, replace = T)
+# Generate random values from bivariate Poisson
+rbivpois <- function(n, lambda1, lambda2, lambda3) {
+  match_result <- numeric(n)
+  frama <- sample_n(
+    tbl = risultati_frame,
+    weight = bivpois(lambda1, lambda2, lambda3, x = risultati_frame[, 1], y = risultati_frame[, 2]),
+    size = 500,
+    replace = TRUE
+  )
   for (i in 1:n) {
-    match_result[i]=paste(frama[i,1], '-' , frama[i,2])
+    match_result[i] <- paste(frama[i, 1], '-', frama[i, 2])
   }
-  return(list(Match_Result=match_result , Matrice = frama))
+  return(list(Match_Result = match_result, Matrix = frama))
 }
 
-##### GOAL FATTI E GOAL SUBITI DA UNA DETERMINATA SQUADRA #####
-
+# Goals scored and conceded by a specific team
 squadra_stats <- function(nome, dati) {
-  # Filtra partite giocate dalla squadra come casa o trasferta
-  partite_casa <- dati[dati$HomeTeam == nome, ]
-  partite_trasferta <- dati[dati$AwayTeam == nome, ]
+  # Filter matches played by the team as home or away
+  home_matches <- dati[dati$HomeTeam == nome, ]
+  away_matches <- dati[dati$AwayTeam == nome, ]
   
-  # Calcola goal fatti e subiti
-  goals_fatti <- sum(partite_casa$FTHG, partite_trasferta$FTAG, na.rm = TRUE)
-  goals_concessi <- sum(partite_casa$FTAG, partite_trasferta$FTHG, na.rm = TRUE)
+  # Calculate goals scored and conceded
+  goals_scored <- sum(home_matches$FTHG, away_matches$FTAG, na.rm = TRUE)
+  goals_conceded <- sum(home_matches$FTAG, away_matches$FTHG, na.rm = TRUE)
   
-  # Restituisci i risultati
+  # Return results
   return(list(
-    Squadra = nome,
-    Fatti = goals_fatti,
-    Concessi = goals_concessi
+    Team = nome,
+    Scored = goals_scored,
+    Conceded = goals_conceded
   ))
 }
+
+
