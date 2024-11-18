@@ -1,22 +1,29 @@
 model {
+  # LIKELIHOOD AND RANDOM EFFECT MODEL FOR THE SCORING PROPENSITY
   for (g in 1:380) {
+    # Observed number of goals scored by each team
     FTHG[g] ~ dpois(theta[g,1])
     FTAG[g] ~ dpois(theta[g,2])
+    # Predictive distribution for the number of goals scored
     ynew[g,1] ~ dpois(theta[g,1])
     ynew[g,2] ~ dpois(theta[g,2])
+    # Average Scoring intensities (accounting for mixing components)
     log(theta[g,1]) <- home + att[HomeTeam[g]] + def[AwayTeam[g]]
     log(theta[g,2]) <- att[AwayTeam[g]] + def[HomeTeam[g]]
   }
+  # 1. BASIC MODEL FOR THE HYPERPARAMETERS
+  # prior on the home effect
   home ~ dnorm(0,0.0001)
+  # ‘‘sum-to-zero’’ CONDITION
   for (t in 1:20){
     att.star[t] ~ dnorm(mu.att,tau.att)
     def.star[t] ~ dnorm(mu.def,tau.def)
     att[t] <- att.star[t] - mean(att.star[])
     def[t] <- def.star[t] - mean(def.star[])
   }
+  # priors on the random effects
   mu.att ~ dnorm(0,0.0001)
   mu.def ~ dnorm(0,0.0001)
   tau.att ~ dgamma(.01,.01)
   tau.def ~ dgamma(.01,.01)
 }
-
