@@ -3,128 +3,12 @@ library(ggplot2)
 library(dplyr)
 
 
-#### GGPLOT LINE GRAPH OF DESCRIPTIVE ANALYSIS #####
-# autoplot of a ts object
-autoplot(forecast(score$Frosinone[1:30]))
-ggAcf(score$Inter)
-
-ggplot(data = season_1819_csv, aes(x=X135_2018$round)) +
-  geom_line(aes(y = score$Frosinone, colour = "TempMax")) +
-  geom_line(aes(y = score$Inter, colour = "TempMedia")) +
-  geom_line(aes(y = score$Atalanta, colour = "TempMin")) +
-  scale_colour_manual("", 
-                      breaks = c("TempMax", "TempMedia", "TempMin"),
-                      values = c("red", "green", "blue")) +
-  xlab(" ") +
-  scale_y_continuous("Temperatura (C)", limits = c(-10,40)) + 
-  labs(title="TITULO")
-
-
-######### VARIABLES #####
-# 1) DIV: XXXXXXXX
-# 2) DATE: DATE OF THE MATCH
-# 3) HOME TEAM
-# 4) AWAY TEAM
-# 5)
-
-##### FUNZIONE GENERAZIONE GOAL PER SQUADRA ####
-squadra = function(nome){
-  goals=numeric(38)
-  conceded=numeric(38)
-  countg=0
-  countc=0
-  for (i in 1:380) {
-    if(season_1819_csv$AwayTeam[i] == nome){
-      countg=countg+1
-      countc=countc+1
-      goals[countg]=season_1819_csv$FTAG[i]
-      conceded[countc]=season_1819_csv$FTHG[i]
-      
-    }
-    if(season_1819_csv$HomeTeam[i] == nome){
-      countg=countg+1
-      countc=countc+1
-      goals[countg]=season_1819_csv$FTHG[i]
-      conceded[countc]=season_1819_csv$FTAG[i]
-    }
-  }
-  return(list(Fatti=goals,Concessi=conceded))
-}
-
-
-scored=numeric(380)
-subito=c()
-for (i in 1:20) {
-  scored=append(scored, values=squadra(names(table(season_1819_csv$HomeTeam))[i])$Fatti)
-  subito=append(subito, values=squadra(names(table(season_1819_csv$HomeTeam))[i])$Concessi)
-}
-scored=scored[-(1:380)]
-
-score=list(Atalanta=scored[1:38], Bologna=scored[39:76], Cagliari=scored[77:114],Chievo=scored[115:152], Empoli=scored[153:190], Fiorentina=scored[191:228], Frosinone=scored[229:266], Genoa=scored[267:304], Inter=scored[305:342], Juventus=scored[343:380], Lazio=scored[381:418], Milan=scored[419:456], Napoli=scored[457:494], Parma=scored[495:532], Roma=scored[533:570], Sampdoria=scored[571:608], Sassuolo=scored[609:646], Spal=scored[647:684], Torino=scored[685:722], Udinese=scored[723:760])
-
-subire=list(Atalanta=subito[1:38], Bologna=subito[39:76], Cagliari=subito[77:114],Chievo=subito[115:152], Empoli=subito[153:190], Fiorentina=subito[191:228], Frosinone=subito[229:266], Genoa=subito[267:304], Inter=subito[305:342], Juventus=subito[343:380], Lazio=subito[381:418], Milan=subito[419:456], Napoli=subito[457:494], Parma=subito[495:532], Roma=subito[533:570], Sampdoria=subito[571:608], Sassuolo=subito[609:646], Spal=subito[647:684], Torino=subito[685:722], Udinese=subito[723:760])
 
 risultati=matrix(NA, nrow=31, ncol = 2)
 risultati_frame=data.frame(risultati)
 risultati_frame[35,1]=4
 colnames(risultati_frame)=c("Home goals", "Away goals")
 
-
-##### DESCRIPTIVE GRAPHIC #####
-
-plot(cumsum(score$Atalanta), type = 'l', lwd=4)
-
-for (i in 1:20) {
-  plot(cumsum(score[[i]]),type ='l', col=i, lwd=4)
-}
-pairs(lapply(score, cumsum))
-
-par(mfrow=c(1,1))
-
-score[2]
-
-plot(cumsum(score$Atalanta), type = 'l', lwd=4, col='darkblue', ylab ="Goals", xlab = "", axes = F)
-points(cumsum(score$Parma),type ='l', col='yellow', lwd=4)
-points(cumsum(score$Fiorentina),type ='l', col='purple', lwd=4)
-legend("topleft", c("Atalanta", "Parma", "Fiorentina"),lwd=4, col=c('darkblue','yellow','purple'), box.col = "white")
-
-points(cumsum(score2$Atalanta),type ='l', col='darkblue', lwd=4, lty = 2)
-points(cumsum(score2$Parma),type ='l', col='yellow', lwd=4, lty = 2)
-points(cumsum(score2$Fiorentina),type ='l', col='purple', lwd=4, lty = 2)
-axis(1, at =1:38, labels = 1:38, las = 2)
-axis(2, at=seq(0,80, by =5), labels = seq(0,80, by =5), las =2)
-box()
-
-for (i in 2:20) {
-  points(1:38,squadra(names(table(season_1819_csv$HomeTeam))[i])$Fatti, col=i, type = 'l')
-}
-length(score$Bologna)
-cbind(1:38, score$Bologna)
-
-names(table(season_1819_csv$HomeTeam))
-
-squadra('Inter')
-
-names(table(season_1819_csv$HomeTeam))
-
-plot(table(season_1819_csv$AwayTeam[season_1819_csv$FTR=="A"]), las =2)
-box()
-
-#GOALS
-barplot(rbind(prop.table(table(season_1819_csv$FTHG)),prop.table(table(season_1819_csv$FTAG))), beside = T, prob = T, ylim=c(0, 0.4), col=c('yellow', 'blue'), border = F)
-box()
-legend("topright", c("Home goals", "Away goals"), fill = c("yellow","blue"))
-
-
-
-prop.table(table(paste(season_1819_csv$FTHG, "-", season_1819_csv$FTAG)))
-
-plot(table(paste(season_1819_csv$FTHG, "-", season_1819_csv$FTAG)), las=2)
-plot(sort(prop.table(table(paste(season_1819_csv$FTHG, "-", season_1819_csv$FTAG)))), las =2)
-box()
-
-substr(names(table(paste(season_1819_csv$FTHG, "-", season_1819_csv$FTAG)))[1], 1, 3)
-names(table(paste(season_1819_csv$FTHG, "-", season_1819_csv$FTAG)))
 
 
 
@@ -170,28 +54,13 @@ table(paste(season_1819_csv$FTHG, "-", season_1819_csv$FTAG))
 str(sample_n(tbl = risultati_frame, prob = bivpois(1,2,3, x=risultati[,1], y=risultati[,2]), size = 500, replace = T))
 
 
-season_1819_csv$rank=NA
-season_1819_csv$rank[season_1819_csv$HomeTeam=="Inter" | season_1819_csv$HomeTeam=="Milan" | season_1819_csv$HomeTeam=="Juventus" | season_1819_csv$HomeTeam=="Roma" | season_1819_csv$HomeTeam=="Lazio" | season_1819_csv$HomeTeam=="Fiorentina"]=3 #average spectators in home stadium in entire season > 30000
-
-season_1819_csv$rank[season_1819_csv$HomeTeam=="Napoli" | season_1819_csv$HomeTeam=="Genoa" | season_1819_csv$HomeTeam=="Torino" | season_1819_csv$HomeTeam=="Bologna" | season_1819_csv$HomeTeam=="Udinese" | season_1819_csv$HomeTeam=="Sampdoria"]=2 #average spectators in home stadiumd in entire season > 20000 and < 30000
-
-season_1819_csv$rank[season_1819_csv$HomeTeam=="Atalanta" | season_1819_csv$HomeTeam=="Parma" | season_1819_csv$HomeTeam=="Cagliari" | season_1819_csv$HomeTeam=="Spal" | season_1819_csv$HomeTeam=="Chievo" | season_1819_csv$HomeTeam=="Frosinone" | season_1819_csv$HomeTeam=="Sassuolo" | season_1819_csv$HomeTeam=="Empoli"]=1
-
-season_1819_csv$rank
 
 
 prod(dpois(score$Atalanta, lambda = 2))
 
 #### MCMC JAGS FOR DATA ATT E DEF ####
 
-mean(score$Atalanta)
-mean(subire$Atalanta)
 
-mean(score$Frosinone)
-mean(subire$Frosinone)
-
-mean(score$Parma)
-mean(subire$Parma)
 
 
 #### POISSON MODELS ####
@@ -285,21 +154,7 @@ abline(v=0)
 abline(a=0,b=.5,lty=2)
 
 
-#### ANALYSIS DOUBLE POISSON (WITHOUT THETA3) ######
-model_foot_1.jags$BUGSoutput$mean$theta
-sum(model_foot_1.jags$BUGSoutput$mean$att)
-sum(model_foot_1.jags$BUGSoutput$mean$def)
-model_foot_1.jags$BUGSoutput$mean$
 
-model_foot_1.jags$BUGSoutput$mean$ynew
-model_foot_1.jags$BUGSoutput$mean$theta
-
-plot(1:20, model_foot_1.jags$BUGSoutput$mean$att, type = 'h', xaxt = "n",xlab = "",ylab = "Attack parameter")
-abline(h=0)
-axis(1,names(table(dati$HomeTeam)), at=1:20, las =2 )
-
-dati_mod_1 = data.frame(cbind(dati$HomeTeam,dati$AwayTeam,round(model_foot_1.jags$BUGSoutput$median$ynew)))
-colnames(dati_mod_1) = c("HomeTeam","AwayTeam","FTHG","FTAG")
 
 squadra_1 = function(nome){
   goals=numeric(38)
@@ -325,15 +180,6 @@ squadra_1 = function(nome){
 }
 
 
-scored_mod1=numeric(380)
-subito_mod1=c()
-for (i in 1:20) {
-  scored_mod1=append(scored_mod1, values=squadra_1(names(table(dati_mod_1$HomeTeam))[i])$Fatti)
-  subito_mod1=append(subito_mod1, values=squadra_1(names(table(dati_mod_1$HomeTeam))[i])$Concessi)
-}
-scored_1=scored_mod1[-(1:380)]
-
-score1=list(Atalanta=as.numeric(scored_1[1:38]), Bologna=as.numeric(scored_1[39:76]), Cagliari=as.numeric(scored_1[77:114]),Chievo=as.numeric(scored_1[115:152]), Empoli=as.numeric(scored_1[153:190]), Fiorentina=as.numeric(scored_1[191:228]), Frosinone=as.numeric(scored_1[229:266]), Genoa=as.numeric(scored_1[267:304]), Inter=as.numeric(scored_1[305:342]), Juventus=as.numeric(scored_1[343:380]), Lazio=as.numeric(scored_1[381:418]), Milan=as.numeric(scored_1[419:456]), Napoli=as.numeric(scored_1[457:494]), Parma=as.numeric(scored_1[495:532]), Roma=as.numeric(scored_1[533:570]), Sampdoria=as.numeric(scored_1[571:608]), Sassuolo=as.numeric(scored_1[609:646]), Spal=as.numeric(scored_1[647:684]), Torino=as.numeric(scored_1[685:722]), Udinese=as.numeric(scored_1[723:760]))
 
 
 plot(1:20, model_foot_1.jags$BUGSoutput$mean$def, type = 'h', xaxt = "n",xlab = "",ylab = "Defense parameter")
@@ -341,73 +187,18 @@ abline(h=0)
 axis(1,names(table(dati$HomeTeam)), at=1:20, las =2 )
 
 
-plot(model_foot_1.jags$BUGSoutput$mean$att,-model_foot_1.jags$BUGSoutput$mean$def, pch = 1, cex=0.0002, xlab = "Attack effect", ylab = "- defense effect")
-text(model_foot_1.jags$BUGSoutput$mean$att,-model_foot_1.jags$BUGSoutput$mean$def, labels=names(table(dati$HomeTeam)), cex = 0.5)
-abline(h=0)
-abline(v=0)
-abline(a=0,b=0.5, lty =2)
 
-plot(model_foot_1.jags$BUGSoutput$sims.array[,,1], type = 'l')
-abline(h=model_foot_1.jags$BUGSoutput$mean$att[1], col ='red',lwd=3)
+
+
 
 table(model_foot_1.jags$BUGSoutput$mean$theta<0.5)
 
 hist(model_foot_1.jags$BUGSoutput$mean$theta)
 
 round(model_foot_1.jags$BUGSoutput$mean$theta)
-#### Table of first model #######
-classifica=list("Atalanta"=0,"Bologna"=0,"Cagliari" =0,"Chievo"=0,"Empoli"=0,"Fiorentina"=0, "Frosinone"=0,"Genoa"=0,"Inter"=0,"Juventus"=0,"Lazio"=0,"Milan"=0,"Napoli"=0,"Parma"=0,"Roma"=0,       "Sampdoria"=0, "Sassuolo"=0,"Spal"=0,"Torino"=0,"Udinese"=0)
-
-for (i in 1:380) {
-  home_t = season_1819_csv$HomeTeam[i]
-  away_t = season_1819_csv$AwayTeam[i]
-  if(round(model_foot_1.jags$BUGSoutput$mean$theta[i,1])>round(model_foot_1.jags$BUGSoutput$mean$theta[i,2])){
-    classifica[[home_t]]=classifica[[home_t]]+3
-  }
-  if(round(model_foot_1.jags$BUGSoutput$mean$theta[i,1])<round(model_foot_1.jags$BUGSoutput$mean$theta[i,2])){
-    classifica[[away_t]]=classifica[[away_t]]+3
-  }
-  if(round(model_foot_1.jags$BUGSoutput$mean$theta[i,1])==round(model_foot_1.jags$BUGSoutput$mean$theta[i,2])){
-    classifica[[away_t]]=classifica[[away_t]]+1
-    classifica[[home_t]]=classifica[[home_t]]+1
-  }
-}
-
-clas_mod_1 = matrix(NA,1,20)
-colnames(clas_mod_1)=names(table(dati$HomeTeam))
-
-for (k in 1:20) {
-  ui=names(table(dati$HomeTeam))[k]
-  clas_mod_1[1,k]=classifica[[ui]]
-}
-clas
-plot(sort(clas_mod_1), type = 'h',xaxt="n",xlab = "")
-axis(1,labels = names(table(dati$HomeTeam))[order(clas_mod_1)], las=2,at=1:20)
 
 
 
-
-#### Real Table of championship ####
-
-classifica_real=list("Atalanta"=0,"Bologna"=0,"Cagliari" =0,"Chievo"=0,"Empoli"=0,"Fiorentina"=0, "Frosinone"=0,"Genoa"=0,"Inter"=0,"Juventus"=0,"Lazio"=0,"Milan"=0,"Napoli"=0,"Parma"=0,"Roma"=0,       "Sampdoria"=0, "Sassuolo"=0,"Spal"=0,"Torino"=0,"Udinese"=0)
-
-for (i in 1:380) {
-  home_t = season_1819_csv$HomeTeam[i]
-  away_t = season_1819_csv$AwayTeam[i]
-  if(season_1819_csv$FTHG[i]>season_1819_csv$FTAG[i]){
-    classifica_real[[home_t]]=classifica_real[[home_t]]+3
-  }
-  if(season_1819_csv$FTHG[i]<season_1819_csv$FTAG[i]){
-    classifica_real[[away_t]]=classifica_real[[away_t]]+3
-  }
-  if(season_1819_csv$FTHG[i]==season_1819_csv$FTAG[i]){
-    classifica_real[[away_t]]=classifica_real[[away_t]]+1
-    classifica_real[[home_t]]=classifica_real[[home_t]]+1
-  }
-}
-
-clas_real_1 = matrix(NA,1,20)
-colnames(clas_real_1)=names(table(dati$HomeTeam))
 
 for (k in 1:20) {
   ui=names(table(dati$HomeTeam))[k]
