@@ -80,7 +80,7 @@ squadra <- function(nome,data) {
       goals[countg] <- data$FTAG[i]
       conceded[countc] <- data$FTHG[i]
     }
-    if (season_1819_csv$HomeTeam[i] == nome) {
+    if (data$HomeTeam[i] == nome) {
       countg <- countg + 1
       countc <- countc + 1
       goals[countg] <- data$FTHG[i]
