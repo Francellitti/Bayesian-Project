@@ -68,23 +68,23 @@ plot_home_away_goals <- function(data) {
 }
 
 # Function to filter goals by team
-squadra <- function(nome) {
+squadra <- function(nome,data) {
   goals <- numeric(38)
   conceded <- numeric(38)
   countg <- 0
   countc <- 0
   for (i in 1:380) {
-    if (season_1819_csv$AwayTeam[i] == nome) {
+    if (data$AwayTeam[i] == nome) {
       countg <- countg + 1
       countc <- countc + 1
-      goals[countg] <- season_1819_csv$FTAG[i]
-      conceded[countc] <- season_1819_csv$FTHG[i]
+      goals[countg] <- data$FTAG[i]
+      conceded[countc] <- data$FTHG[i]
     }
     if (season_1819_csv$HomeTeam[i] == nome) {
       countg <- countg + 1
       countc <- countc + 1
-      goals[countg] <- season_1819_csv$FTHG[i]
-      conceded[countc] <- season_1819_csv$FTAG[i]
+      goals[countg] <- data$FTHG[i]
+      conceded[countc] <- data$FTAG[i]
     }
   }
   return(list(Goals = goals, Conceded = conceded))
