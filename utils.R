@@ -68,7 +68,7 @@ plot_home_away_goals <- function(data) {
 }
 
 # Function to filter goals by team
-squadra <- function(nome,data) {
+squadra <- function(nome, data) {
   goals <- numeric(38)
   conceded <- numeric(38)
   countg <- 0
@@ -131,6 +131,126 @@ squadra_stats <- function(nome, dati) {
     Scored = goals_scored,
     Conceded = goals_conceded
   ))
+}
+
+# Function for computing ALL goals (scored and conceded)
+compute_goal <- function(nome_squadra) {
+  dati_squadra <- squadra(nome_squadra, data)
+  list(Scored = dati_squadra$Goals, Conceded = dati_squadra$Conceded)
+}
+
+compute_estimated_goal <- function(nome_squadra) {
+  dati_squadra <- squadra(nome_squadra, dati_mod_1)
+  list(Scored = dati_squadra$Goals, Conceded = dati_squadra$Conceded)
+}
+
+# Function to update team rankings based on match results
+update_classification <- function(data) {
+  # Initialize the classification table with 0 points for each team
+  classifica_real <- setNames(rep(0, length(unique(c(data$HomeTeam, data$AwayTeam)))), 
+                              unique(c(data$HomeTeam, data$AwayTeam)))
+  
+  # Loop through the matches and update the points in the classification table
+  for (i in 1:nrow(data)) {
+    home_t <- data$HomeTeam[i]
+    away_t <- data$AwayTeam[i]
+    
+    # Compare the scores and update points accordingly
+    home_score <- round(data$FTHG[i])
+    away_score <- round(data$FTAG[i])
+    
+    if (home_score > away_score) {
+      classifica_real[home_t] <- classifica_real[home_t] + 3
+    } else if (home_score < away_score) {
+      classifica_real[away_t] <- classifica_real[away_t] + 3
+    } else {
+      classifica_real[home_t] <- classifica_real[home_t] + 1
+      classifica_real[away_t] <- classifica_real[away_t] + 1
+    }
+  }
+  # Create a matrix to store the classification points in the correct order
+  clas_mod_real <- matrix(classifica_real[order(names(classifica_real))], nrow = 1)
+  colnames(clas_mod_real) <- names(classifica_real)
+  return(clas_mod_real)
+}
+
+
+# Function to update team rankings based on match results
+update_classification_estim <- function(data,theta1, theta2) {
+  # Initialize the classification table with 0 points for each team
+  classifica_real <- setNames(rep(0, length(unique(c(data$HomeTeam, data$AwayTeam)))), 
+                              unique(c(data$HomeTeam, data$AwayTeam)))
+  
+  # Loop through the matches and update the points in the classification table
+  for (i in 1:nrow(data)) {
+    home_t <- data$HomeTeam[i]
+    away_t <- data$AwayTeam[i]
+    
+    # Compare the scores and update points accordingly
+    home_score <- round(theta1[i])
+    away_score <- round(theta2[i])
+    
+    if (home_score > away_score) {
+      classifica_real[home_t] <- classifica_real[home_t] + 3
+    } else if (home_score < away_score) {
+      classifica_real[away_t] <- classifica_real[away_t] + 3
+    } else {
+      classifica_real[home_t] <- classifica_real[home_t] + 1
+      classifica_real[away_t] <- classifica_real[away_t] + 1
+    }
+  }
+  # Create a matrix to store the classification points in the correct order
+  clas_mod_real <- matrix(classifica_real[order(names(classifica_real))], nrow = 1)
+  colnames(clas_mod_real) <- names(classifica_real)
+  return(clas_mod_real)
+}
+
+
+# Function to update classification based on Bivariate Poisson results
+update_classification_biv <- function(data, predictions) {
+  # Initialize classification table
+  classification <- setNames(rep(0, length(unique(c(data$HomeTeam, data$AwayTeam)))), 
+                             unique(c(data$HomeTeam, data$AwayTeam)))
+  
+  # Loop through matches and update points
+  for (i in 1:nrow(data)) {
+    home_team <- data$HomeTeam[i]
+    away_team <- data$AwayTeam[i]
+    
+    home_score <- round(predictions$median$ynew[i, 1])
+    away_score <- round(predictions$median$ynew[i, 2])
+    
+    if (home_score > away_score) {
+      classification[home_team] <- classification[home_team] + 3
+    } else if (home_score < away_score) {
+      classification[away_team] <- classification[away_team] + 3
+    } else {
+      classification[home_team] <- classification[home_team] + 1
+      classification[away_team] <- classification[away_team] + 1
+    }
+  }
+  
+  return(classification)
+}
+
+# Function to plot team performance
+plot_team_performance <- function(score_data, concede_data, team_name) {
+  par(mfrow = c(1, 1))
+  
+  score_table <- table(paste(unlist(score_data[[team_name]]), "-", unlist(concede_data[[team_name]])))
+  plot(score_table, ylab = "Number of matches with a final score", 
+       main = team_name, las = 2)
+  points(2, 5, col = 'red', type = 'h', lwd = 3)
+  box()
+}
+
+# Function to compare Bivariate Poisson predictions with real results
+compare_predictions <- function(biv_classification, real_classification, team_names) {
+  plot(1:20, biv_classification, type = 'h', ylim = c(0, 90), xaxt = "n", 
+       xlab = "", ylab = "Points", main = "Bivariate vs Real Points")
+  points((1:20) + 0.2, real_classification, type = 'h', col = 'red')
+  axis(1, at = 1:20, labels = team_names, las = 2)
+  legend("topright", lwd = 2, col = c('black', 'red'), legend = c("Bivariate", "Real"))
 }
 
 
