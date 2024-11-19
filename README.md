@@ -39,6 +39,9 @@ The main goals of the project are:
 
 ## Comparison of attack and defense effects between models
 
-![Alt text](images/effects_different_models.pdf)
+![Attack Defense effects](images/effects.png)
 
+## Distribution of attack effects
 
+![Attack 1](images/att_1.png)
+![Attack 2](images/att_2.png)
