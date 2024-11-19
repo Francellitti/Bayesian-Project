@@ -1,16 +1,7 @@
-library(forecast)
-library(ggplot2)
-library(dplyr)
-
-
-
 risultati=matrix(NA, nrow=31, ncol = 2)
 risultati_frame=data.frame(risultati)
 risultati_frame[35,1]=4
 colnames(risultati_frame)=c("Home goals", "Away goals")
-
-
-
 
 ##### DENSITY OF BIVARIATE POISSON ####
 
@@ -265,144 +256,7 @@ def=rep(0.01,20)
 colnames(def) = names(table(dati$HomeTeam))
 def=data.frame(def)
 
-as.mcmc.list(as.mcmc(model_foot_1.jags))
 
-class(mcmc.football)
-
-dati_mod_2 = data.frame(cbind(dati$HomeTeam,dati$AwayTeam,round(model_foot_2.jags$BUGSoutput$mean$ynew)))
-colnames(dati_mod_2) = c("HomeTeam","AwayTeam","FTHG","FTAG")
-##### FUNZIONE GENERAZIONE GOAL PER SQUADRA MODELLO 2 ####
-squadra_2 = function(nome){
-  goals=numeric(38)
-  conceded=numeric(38)
-  countg=0
-  countc=0
-  for (i in 1:380) {
-    if(dati_mod_2$AwayTeam[i] == nome){
-      countg=countg+1
-      countc=countc+1
-      goals[countg]=dati_mod_2$FTAG[i]
-      conceded[countc]=dati_mod_2$FTHG[i]
-      
-    }
-    if(dati_mod_2$HomeTeam[i] == nome){
-      countg=countg+1
-      countc=countc+1
-      goals[countg]=dati_mod_2$FTHG[i]
-      conceded[countc]=dati_mod_2$FTAG[i]
-    }
-  }
-  return(list(Fatti=goals,Concessi=conceded))
-}
-
-
-##### CLASSIFICA BIVARIATE POISSON #######
-
-
-classifica_BIVPm=list("Atalanta"=0,"Bologna"=0,"Cagliari" =0,"Chievo"=0,"Empoli"=0,"Fiorentina"=0, "Frosinone"=0,"Genoa"=0,"Inter"=0,"Juventus"=0,"Lazio"=0,"Milan"=0,"Napoli"=0,"Parma"=0,"Roma"=0,"Sampdoria"=0, "Sassuolo"=0,"Spal"=0,"Torino"=0,"Udinese"=0)
-
-table(model_foot_2.jags$BUGSoutput$sims.list$ynew[,13,1])
-table(model_foot_2.jags$BUGSoutput$sims.list$ynew[,13,2])
-
-median(model_foot_2.jags$BUGSoutput$sims.list$ynew[,13,2])
-
-table(model_foot_2.jags$BUGSoutput$sims.list$ynew[,14,1])
-table(model_foot_2.jags$BUGSoutput$sims.list$ynew[,14,2])
-
-unlist(score$Juventus)
-unlist(subire$Juventus)
-
-
-par(mfrow=c(1,2))
-plot(table(paste(unlist(score$Juventus), "-", unlist(subire$Juventus))),ylab = "Number of matches with a final score", main ="Juventus", las =2)
-points(2,5, col ='red', type='h', lwd = 3)
-box()
-plot(table(paste(unlist(score$Parma), "-", unlist(subire$Parma))), las =2, ylab = "Number of matches with a final score", main ="Parma")
-points(6,5, col ='red', type='h', lwd = 3)
-box()
-
-for (i in 1:380) {
-  home_t = season_1819_csv$HomeTeam[i]
-  away_t = season_1819_csv$AwayTeam[i]
-  if(round(model_foot_2.jags$BUGSoutput$median$ynew[i,1])>round(model_foot_2.jags$BUGSoutput$median$ynew[i,2])){
-    classifica_BIVPm[[home_t]]=classifica_BIVPm[[home_t]]+3
-  }
-  if(round(model_foot_2.jags$BUGSoutput$median$ynew[i,1])<round(model_foot_2.jags$BUGSoutput$median$ynew[i,2])){
-    classifica_BIVPm[[away_t]]=classifica_BIVPm[[away_t]]+3
-  }
-  if(round(model_foot_2.jags$BUGSoutput$median$ynew[i,1])==round(model_foot_2.jags$BUGSoutput$median$ynew[i,2])){
-    classifica_BIVPm[[away_t]]=classifica_BIVPm[[away_t]]+1
-    classifica_BIVPm[[home_t]]=classifica_BIVPm[[home_t]]+1
-  }
-}
-
-
-plot(1:20,classifica_BIVPm, type='h', ylim = c(0,90), xaxt="n", xlab ="", ylab="Points")
-points((1:20)+0.2,classifica_real, type = 'h', col ='red')
-axis(1, at=1:20, labels = names(table(dati$HomeTeam)), las =2)
-legend("topright", lwd =2, col =c('black','red'), legend = c("Bivariate","Real"))
-
-
-classifica_BIVPm
-
-model_foot_2.jags$BUGSoutput$median$ynew
-
-##### GOALS SCORED #####
-
-scored_mod2=numeric(380)
-subito_mod2=c()
-for (i in 1:20) {
-  scored_mod2=append(scored_mod2, values=squadra_2(names(table(dati_mod_2$HomeTeam))[i])$Fatti)
-  subito_mod2=append(subito_mod2, values=squadra_2(names(table(dati_mod_2$HomeTeam))[i])$Concessi)
-}
-scored_2=scored_mod2[-(1:380)]
-
-score2=list(Atalanta=as.numeric(scored_2[1:38]), Bologna=as.numeric(scored_2[39:76]), Cagliari=as.numeric(scored_2[77:114]),Chievo=as.numeric(scored_2[115:152]), Empoli=as.numeric(scored_2[153:190]), Fiorentina=as.numeric(scored_2[191:228]), Frosinone=as.numeric(scored_2[229:266]), Genoa=as.numeric(scored_2[267:304]), Inter=as.numeric(scored_2[305:342]), Juventus=as.numeric(scored_2[343:380]), Lazio=as.numeric(scored_2[381:418]), Milan=as.numeric(scored_2[419:456]), Napoli=as.numeric(scored_2[457:494]), Parma=as.numeric(scored_2[495:532]), Roma=as.numeric(scored_2[533:570]), Sampdoria=as.numeric(scored_2[571:608]), Sassuolo=as.numeric(scored_2[609:646]), Spal=as.numeric(scored_2[647:684]), Torino=as.numeric(scored_2[685:722]), Udinese=as.numeric(scored_2[723:760]))
-
-subire2=list(Atalanta=subito_mod2[1:38], Bologna=subito_mod2[39:76], Cagliari=subito_mod2[77:114],Chievo=subito_mod2[115:152], Empoli=subito_mod2[153:190], Fiorentina=subito_mod2[191:228], Frosinone=subito_mod2[229:266], Genoa=subito_mod2[267:304], Inter=subito_mod2[305:342], Juventus=subito_mod2[343:380], Lazio=subito_mod2[381:418], Milan=subito_mod2[419:456], Napoli=subito_mod2[457:494], Parma=subito_mod2[495:532], Roma=subito_mod2[533:570], Sampdoria=subito_mod2[571:608], Sassuolo=subito_mod2[609:646], Spal=subito_mod2[647:684], Torino=subito_mod2[685:722], Udinese=subito_mod2[723:760])
-
-barplot(rbind(unlist(lapply(score, sum)),unlist(lapply(score2, sum))), beside = T, las =2, ylim=c(0,80), col = c('darkorange','purple2'))
-
-legend("topright", box.col = "white", fill = c('darkorange','purple2'), legend = c("Real","Bivariate Poisson"))
-
-table(score$Frosinone)
-table(score$Chievo)
-table(score$Cagliari)
-table(score$Udinese)
-lapply(score, table)
-
-unlist(lapply(score3, sum))-unlist(lapply(score, sum))
-box()
-#######
-# Parameters to monitor
-
-params2_2=c("att","def","theta","home","beta_const","ynew")
-parms = c("beta","g")
-
-
-dat_2 = list("HomeTeam"=as.numeric(as.factor(dat$HomeTeam)),"AwayTeam"=as.numeric(as.factor(dat$AwayTeam)), "rank"=dati$rank, "FTHG" = dati$FTHG, "FTAG"=dati$FTAG)
-
-library(R2jags)
-model_foot_2.jags=jags(data=dat_2,inits=list(inits2_2),
-                       parameters.to.save=params2_2,
-                       model.file="project_model_2_jags.txt",
-                       DIC=TRUE,n.chains=1,n.iter=10000,n.burnin=1000,n.thin=1)
-
-
-model_foot_2.jags$BUGSoutput$last.values
-
-
-round(model_foot_2.jags$BUGSoutput$mean$ynew)
-round(model_foot_2.jags$BUGSoutput$mean$theta[3])
-hist(model_foot_2.jags$BUGSoutput$mean$theta[,3])
-barplot(table(c(round(model_foot_2.jags$BUGSoutput$mean$ynew[,1]),round(model_foot_2.jags$BUGSoutput$mean$ynew[,2]))))
-
-model_foot_2.jags$BUGSoutput$DIC
-
-
-plot(1:9000,cumsum(model_foot_2.jags$BUGSoutput$sims.list$theta[,2,3])/(1:9000), type = 'l')
-model_foot_2.jags$BUGSoutput$DIC
-model_foot_1.jags$BUGSoutput$DIC
 ##### PLOTS ######
 BV00$beta3
 BV00$lambda3
@@ -410,22 +264,7 @@ library(R2jags)
 print(model_foot_1.jags)
 
 
-par(mfrow=c(2,2))
-plot(1:9000,cumsum(model_foot_1.jags$BUGSoutput$sims.list$att[,1])/(1:9000), ylab = "", xlab = "Atalanta Attack", pch=16, col = c('black','blue'))
 
-plot(1:9000,cumsum(model_foot_1.jags$BUGSoutput$sims.list$def[,1])/(1:9000), ylab = "", xlab = "Atalanta Defense", pch=16, col = c('black','blue'))
-
-plot(1:9000,cumsum(model_foot_1.jags$BUGSoutput$sims.list$att[,7])/(1:9000), ylab = "", xlab = "Frosinone Attack", pch=16, col = c('gold','gold'))
-
-plot(1:9000,cumsum(model_foot_1.jags$BUGSoutput$sims.list$def[,7])/(1:9000), ylab = "", xlab = "Frosinone Defense", pch=16, col = c('gold','gold'))
-
-plot(1:9000,cumsum(model_foot_1.jags$BUGSoutput$sims.list$att[,15])/(1:9000), ylab = "", xlab = "Roma Attack", pch=16, col = c('gold','red2'))
-
-plot(1:9000,cumsum(model_foot_1.jags$BUGSoutput$sims.list$def[,15])/(1:9000), ylab = "", xlab = "Roma Defense", pch=16, col = c('gold','red2'))
-
-plot(1:9000,cumsum(model_foot_1.jags$BUGSoutput$sims.list$att[,15])/(1:9000), ylab = "", xlab = "Fiorentina Attack", pch=16, col = "purple3")
-
-plot(1:9000,cumsum(model_foot_1.jags$BUGSoutput$sims.list$def[,15])/(1:9000), ylab = "", xlab = "Fiorentina Defense", pch=16, col = "purple3")
 
 par(mfrow=c(1,1))
 library(mcmc)
@@ -456,44 +295,7 @@ S <- ggs((mcmc.football))
 ggmcmc(S)
 S
 
-#####PLOTFIGO#####
 
-library(ggplot2)
-library(ggridges)
-library(viridis)
-par(mfrow=c(1,1))
-p = ggplot(data.frame(plotfigo[1:90000,]), aes(x=as.numeric(plotfigo[1:90000,1]),y=plotfigo[1:90000,2],fill =after_stat(x))) + geom_density_ridges_gradient(scale=2) + xlab("Attack effect") + ylab("") + scale_fill_viridis(option='B')
-p
-
-q = ggplot(data.frame(plotfigo[90001:180000,]), aes(x=as.numeric(plotfigo[90001:180000,1]),y=plotfigo[90001:180000,2],fill =after_stat(x))) + geom_density_ridges_gradient() + xlab("Attack effect") + ylab("") + scale_fill_viridis(option='B')
-q <- q + guides(fill=guide_legend(title="Teams"))
-q
-print(model_foot_1.jags)
-length(plotfigo1[,1])
-round(plotfigo1[,1],2)
-plotfigo=matrix(NA, nrow = 9000*20,ncol=2)
-dim(model_foot_1.jags$BUGSoutput$sims.array)
-
-beta = c('beta1')
-beta[i+1]
-for (i in 0:19) {
-    plotfigo[(1+(9000*i)):(9000+9000*i),1] = model_foot_1.jags$BUGSoutput$sims.array[,,20+i+1]
-    plotfigo[(1+(9000*i)):(9000+9000*i),2] = names(table(dati$HomeTeam))[i+1]
-}
-
-plotfigo1=matrix(NA, nrow = 9000*20,ncol=2)
-
-for (i in 0:19) {
-  plotfigo1[(1+(9000*i)):(9000+9000*i),1] = model_foot_1.jags$BUGSoutput$sims.array[,,20+i+1]
-  plotfigo1[(1+(9000*i)):(9000+9000*i),2] = names(table(dati$HomeTeam))[i+1]
-}
-
-r = ggplot(data.frame(plotfigo1[1:90000,]), aes(x=as.numeric(plotfigo1[1:90000,1]),y=plotfigo1[1:90000,2],fill =after_stat(x))) + geom_density_ridges_gradient() + xlab("Defense effect") + ylab("") + scale_fill_viridis(option='B') + the
-
-r
-
-s = ggplot(data.frame(plotfigo1[90001:180000,]), aes(x=as.numeric(plotfigo1[90001:180000,1]),y=plotfigo1[90001:180000,2],fill =after_stat(x))) + geom_density_ridges_gradient() + xlab("Defense effect") + ylab("") + scale_fill_viridis(option='B')
-s
 
 
 as.numeric(plotfigo1[,1])
