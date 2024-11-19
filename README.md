@@ -36,3 +36,9 @@ The main goals of the project are:
 - To understand the scoring behavior of teams using different probabilistic models.
 - To estimate team-specific parameters (attack and defense abilities).
 - To predict the number of goals in upcoming matches based on the models.
+
+## Comparison of attack and defense effects between models
+
+![Alt text](images/effects_different_models.pdf)
+
+
